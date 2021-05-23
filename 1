@@ -1,0 +1,934 @@
+#include<fstream>
+#include<iostream>
+#include<stdlib.h>
+#include<string>
+#include<conio.h>
+using namespace std;
+
+void mainmenu1();
+struct cart;
+int menflag=0;
+int wmnflag=0;
+int clothingflag=0;
+int footwearflag=0;
+int discountflag=0;
+int nondiscountflag=0;
+void login();
+void signup();
+void category();
+void dnd();
+void shop();
+int loginflag=0;
+int userid=0;
+string searchuser;
+
+struct cart
+{
+    int gender;
+    int cattype;
+    int isdiscount;
+    int itemid;
+    string name;
+    float price;
+    float discount;
+    int printedonboot;
+    float finalprice;
+    float GST;
+    cart *next;
+}*head_cart=NULL,*last=NULL;
+void Account()
+{
+    int i;
+    string u,p,d;
+    ifstream input("database.txt");
+    while(input>>i>>u>>p>>d)
+    {
+        if(u==searchuser)
+        {
+                cout<<"\nuser name "<<u;
+                cout<<"\npassword "<<p;
+                cout<<"\ndateofbirth "<<d;
+                cout<<"\nPress any key to continue\n";
+                getch();
+                break;
+        }
+    }
+    mainmenu1();
+}
+void gender()
+{      int choice;
+       system("cls");
+       cout<<" 1. Men\n";
+       cout<<" 2. Women\n";
+       cout<<"Enter your choice\n";
+       cin>>choice;
+       switch(choice)
+       {
+           case 1:
+               menflag=1;
+               wmnflag=0;
+               break;
+           case 2:
+                wmnflag=1;
+                menflag=0;
+                break;
+           default:
+            gender();
+       }
+       category();
+}
+void category()
+{   int choice;
+    system("cls");
+    cout<<" 1.Clothing\n";
+    cout<<" 2.Footwear\n";
+    cout<<"Enter your choice\n";
+    cin>>choice;
+    switch(choice)
+    {
+        case 1:
+            clothingflag=1;
+            footwearflag=0;
+            break;
+        case 2:
+            clothingflag=0;
+            footwearflag=1;
+            break;
+        default:
+            category();
+    }
+        dnd();
+}
+void dnd()
+{
+    int choice;
+    system("cls");
+    cout<<" 1.Non- Discount\n";
+    cout<<" 2.Discount\n";
+    cin>>choice;
+    switch(choice)
+    {
+        case 1:
+            discountflag=0;
+            nondiscountflag=1;
+            break;
+        case 2:
+            discountflag=1;
+            nondiscountflag=0;
+            break;
+        default:
+            dnd();
+    }
+    shop();
+}
+struct item
+{
+    int gender;
+    int cattype; //catogory =1 for cloth , 0 for footwear
+    int isdiscount;
+    int itemid;
+    string name;
+    float price;
+    float discount;
+    float priceafterdiscount;
+    float finalprice;
+    int printedonboot;
+    float GST;
+    item *next;
+}*mcn=NULL,*mcd=NULL,*mfn=NULL,*mfd=NULL,*wcn=NULL,*wcd=NULL,*wfn=NULL,*wfd=NULL,*ptr=NULL;
+void additem(int cattype,int itemid,string name,float price , float discount, int printonboot)
+{
+    item *insert=new item;
+    insert->cattype=cattype;
+    insert->next=NULL;
+    insert->itemid=itemid;
+    insert->name=name;
+    insert->price=price;
+    insert->discount=discount;
+    insert->priceafterdiscount=insert->price-insert->discount*insert->price/100.0;
+
+    insert->printedonboot=printonboot;
+    if(cattype && insert->price>=1000)
+        insert->GST=12;  // clothing+price>=1000
+    else if(cattype && insert->price<1000)
+        insert->GST=5;
+    else if(!cattype && insert->printedonboot && insert->price<500)
+        insert->GST=5;
+    else if(!cattype)
+        insert->GST=18;
+    insert->finalprice=insert->priceafterdiscount+insert->GST*insert->priceafterdiscount/100.0;
+
+    if(ptr==NULL)
+    {
+        ptr=insert;
+    }
+    else
+    {
+        ptr->next=insert;
+        ptr=insert;
+    }
+
+}
+void database()
+{
+    additem(1,101,"Jeans     ",500,0,0);
+    mcn=ptr;    //men+clothing+nondiscountted
+    additem(1,102,"Pant  1   ",600,0,0);
+    additem(1,103,"Trouser 1 ",1600,0,0);
+    additem(1,104,"Tshirt 1  ",9600,0,0);
+    additem(1,101,"Lower     ",1500,0,0);
+    additem(1,105,"Pant 2    ",600,0,0);
+    additem(1,106,"Trouser 2 ",6000,0,0);
+    additem(1,107,"Tshirt  2 ",900,0,0);
+
+
+
+    ptr=NULL;
+    additem(1,201,"Jeans     ",500,50,0);
+    mcd=ptr;    //men+clothing+discounted
+    additem(1,202,"Pant      ",600,50,0);
+    additem(1,203,"Trouser   ",1600,50,0);
+    additem(1,204,"Tshirt    ",900,50,0);
+    additem(1,205,"Trouser 1 ",800,10,0);
+    additem(1,206,"Tshirt 1  ",400,10,0);
+    additem(1,207,"Lower     ",1500,20,0);
+    additem(1,208,"Pant 2    ",1600,30,0);
+    additem(1,209,"Trouser 2 ",1600,20,0);
+    additem(1,210,"Tshirt  2 ",1400,10,0);
+
+
+    ptr=NULL;
+    additem(0,301,"Schoolwear",500,0,0);
+    mfn=ptr;    //men+footwear+nondiscounted
+    additem(0,302,"Formalwear",600,0,0);
+    additem(0,303,"Sportswear",1600,0,0);
+    additem(0,304,"Boots     ",900,0,0);
+    additem(0,305,"Jooti     ",800,0,0);
+    additem(0,306,"Chappal   ",400,0,1);  // printed on boot
+    additem(0,307,"Boots1    ",1500,0,0);
+    additem(0,308,"Boots  3  ",1600,0,0);
+    additem(0,309,"Sportswear",1600,0,0);
+    additem(0,310,"Formalwear",1400,0,0);
+
+
+
+    ptr=NULL;
+    additem(0,401,"Schoolwear",500,10,0);
+    mfd=ptr;    //men+footwear+nondiscounted
+    additem(0,402,"Formalwear",600,10,0);
+    additem(0,403,"Sportswear",1600,15,0);
+    additem(0,404,"Boots     ",900,10,0);
+    additem(0,405,"Jooti     ",800,90,0);
+    additem(0,406,"Chappal   ",400,10,1);
+    additem(0,407,"Boots1    ",1500,20,0);
+    additem(0,408,"Boots  3  ",1600,40,0);
+    additem(0,409,"Sportswear",1600,3,0);
+    additem(0,410,"Formalwear",1400,30,0);
+
+
+
+   //woman database
+
+
+
+
+    additem(1,501,"Jeans     ",500,0,0);
+    wcn=ptr;    //men+clothing+nondiscountted
+    additem(1,502,"Pant  1   ",600,0,0);
+    additem(1,503,"Trouser 1 ",1600,0,0);
+    additem(1,504,"Tshirt 1  ",9600,0,0);
+    additem(1,501,"Lower     ",1500,0,0);
+    additem(1,505,"Pant 2    ",600,0,0);
+    additem(1,506,"Trouser 2 ",6000,0,0);
+    additem(1,507,"Tshirt  2 ",900,0,0);
+
+
+
+    ptr=NULL;
+    additem(1,601,"Jeans     ",500,50,0);
+    wcd=ptr;    //men+clothing+discounted
+    additem(1,602,"Pant      ",600,50,0);
+    additem(1,603,"Trouser   ",1600,50,0);
+    additem(1,604,"Tshirt    ",900,50,0);
+    additem(1,605,"Trouser 1 ",800,10,0);
+    additem(1,606,"Tshirt 1  ",400,10,0);
+    additem(1,607,"Lower     ",1500,20,0);
+    additem(1,608,"Pant 2    ",1600,30,0);
+    additem(1,609,"Trouser 2 ",1600,20,0);
+    additem(1,610,"Tshirt  2 ",1400,10,0);
+
+
+    ptr=NULL;
+    additem(0,701,"Schoolwear",500,0,0);
+    wfn=ptr;    //men+footwear+nondiscounted
+    additem(0,702,"Formalwear",600,0,0);
+    additem(0,703,"Sportswear",1600,0,0);
+    additem(0,704,"Boots     ",900,0,0);
+    additem(0,705,"Jooti     ",800,0,0);
+    additem(0,706,"Chappal   ",400,0,1);  // printed on boot
+    additem(0,707,"Boots1    ",1500,0,0);
+    additem(0,708,"Boots  3  ",1600,0,0);
+    additem(0,709,"Sportswear",1600,0,0);
+    additem(0,710,"Formalwear",1400,0,0);
+
+
+
+    ptr=NULL;
+    additem(0,801,"Schoolwear",500,10,0);
+    wfd=ptr;    //men+footwear+nondiscounted
+    additem(0,802,"Formalwear",600,10,0);
+    additem(0,803,"Sportswear",1600,15,0);
+    additem(0,804,"Boots     ",900,10,0);
+    additem(0,805,"Jooti     ",800,90,0);
+    additem(0,806,"Chappal   ",400,10,1);
+    additem(0,807,"Boots1    ",1500,20,0);
+    additem(0,808,"Boots  3  ",1600,40,0);
+    additem(0,809,"Sportswear",1600,3,0);
+    additem(0,810,"Formalwear",1400,30,0);
+
+
+
+
+
+
+
+}
+
+void shop()
+{
+    system("cls");
+    if(menflag==1 && clothingflag==1 && nondiscountflag==1)
+    {
+        item *temp=mcn;
+        cout<<"ItemId\tItem Name\tPrice\tDiscount\tPriceAfterDisc\tGST\tFinal Price"<<endl;
+        while(temp!=NULL)
+        {
+
+            cout<<temp->itemid<<"\t"<<temp->name<<"\t"<<temp->price<<"\t"<<temp->discount<<"%"<<"\t\t"<<temp->priceafterdiscount<<"\t\t"<<temp->GST<<"%"<<"\t"<<temp->finalprice<<endl;
+            temp=temp->next;
+        }
+        cout<<"Please select the item through Item ID ";
+       // fflush(stdin);
+
+        int id;
+        cin>>id;
+        temp=mcn;
+        while(temp!=NULL && !(temp->itemid==id))
+        {
+            temp=temp->next;
+        }
+        if(temp==NULL)
+        {
+            cout<<"\nEnter valid ID again, Press any key to continue\n";
+            getch();
+            shop();
+        }
+        else
+        {   cart *insert=new cart;
+            insert->next=NULL;
+            insert->itemid=temp->itemid;
+            insert->name=temp->name;
+            insert->finalprice=temp->finalprice;
+            if(head_cart==NULL)
+            {
+                head_cart=insert;
+            }
+            if(last==NULL)
+            {
+                last=insert;
+            }
+            else
+            {
+                last->next=insert;
+                last=insert;
+            }
+        }
+        cout<<"\n Want to purchase more from this ? press 'y' to continue or any key to go to main menu  ";
+        char ch;
+        cin>>ch;
+
+        if(ch=='y')
+            shop();
+        else
+            mainmenu1();
+        }
+
+
+
+
+
+
+
+        else if(menflag==1 && clothingflag==1 && discountflag==1)
+        {
+        item *temp=mcd;
+        cout<<"ItemId\tItem Name\tPrice\tDiscount\tPriceAfterDisc\tGST\tFinal Price"<<endl;
+        while(temp!=NULL)
+        {
+
+            cout<<temp->itemid<<"\t"<<temp->name<<"\t"<<temp->price<<"\t"<<temp->discount<<"%"<<"\t\t"<<temp->priceafterdiscount<<"\t\t"<<temp->GST<<"%"<<"\t"<<temp->finalprice<<endl;
+            temp=temp->next;
+        }
+        cout<<"Please select the item through Item ID ";
+        int id;
+        cin>>id;
+        temp=mcd;
+        while(temp!=NULL && !(temp->itemid==id))
+        {
+            temp=temp->next;
+        }
+        if(temp==NULL)
+        {
+            cout<<"\nEnter valid ID again, Press any key to continue\n";
+            getch();
+            shop();
+        }
+        else
+        {   cart *insert=new cart;
+            insert->next=NULL;
+            insert->itemid=temp->itemid;
+            insert->name=temp->name;
+            insert->finalprice=temp->finalprice;
+            if(head_cart==NULL)
+            {
+                head_cart=insert;
+            }
+            if(last==NULL)
+            {
+                last=insert;
+            }
+            else
+            {
+                last->next=insert;
+                last=insert;
+            }
+        }
+        cout<<"\n Want to purchase more from this ? press 'y' to continue or any key to go to main menu  ";
+        char ch;
+        cin>>ch;
+        if(ch=='y')
+            shop();
+        else
+            mainmenu1();
+        }
+
+
+
+
+
+        else if(menflag==1 && footwearflag==1 && nondiscountflag==1)
+        {
+        item *temp=mfn;
+        cout<<"ItemId\tItem Name\tPrice\tDiscount\tPriceAfterDisc\tGST\tFinal Price"<<endl;
+        while(temp!=NULL)
+        {
+
+            cout<<temp->itemid<<"\t"<<temp->name<<"\t"<<temp->price<<"\t"<<temp->discount<<"%"<<"\t\t"<<temp->priceafterdiscount<<"\t\t"<<temp->GST<<"%"<<"\t"<<temp->finalprice<<endl;
+            temp=temp->next;
+        }
+        cout<<"Please select the item through Item ID ";
+        int id;
+        cin>>id;
+        temp=mfn;
+        while(temp!=NULL && !(temp->itemid==id))
+        {
+            temp=temp->next;
+        }
+        if(temp==NULL)
+        {
+            cout<<"\nEnter valid ID again, Press any key to continue\n";
+            getch();
+            shop();
+        }
+        else
+        {   cart *insert=new cart;
+            insert->next=NULL;
+            insert->itemid=temp->itemid;
+            insert->name=temp->name;
+            insert->finalprice=temp->finalprice;
+            if(head_cart==NULL)
+            {
+                head_cart=insert;
+            }
+            if(last==NULL)
+            {
+                last=insert;
+            }
+            else
+            {
+                last->next=insert;
+                last=insert;
+            }
+        }
+        cout<<"\n Want to purchase more from this ? press 'y' to continue or any key to go to main menu  ";
+        char ch;
+        cin>>ch;
+        if(ch=='y')
+            shop();
+        else
+            mainmenu1();
+        }
+
+
+
+
+
+
+        else if(menflag==1 && footwearflag==1 && discountflag==1)
+        {
+        item *temp=mfd;
+        cout<<"ItemId\tItem Name\tPrice\tDiscount\tPriceAfterDisc\tGST\tFinal Price"<<endl;
+        while(temp!=NULL)
+        {
+
+            cout<<temp->itemid<<"\t"<<temp->name<<"\t"<<temp->price<<"\t"<<temp->discount<<"%"<<"\t\t"<<temp->priceafterdiscount<<"\t\t"<<temp->GST<<"%"<<"\t"<<temp->finalprice<<endl;
+            temp=temp->next;
+        }
+        cout<<"Please select the item through Item ID ";
+        int id;
+        cin>>id;
+        temp=mfd;
+        while(temp!=NULL && !(temp->itemid==id))
+        {
+            temp=temp->next;
+        }
+        if(temp==NULL)
+        {
+            cout<<"\nEnter valid ID again, Press any key to continue\n";
+            getch();
+            shop();
+        }
+        else
+        {   cart *insert=new cart;
+            insert->next=NULL;
+            insert->itemid=temp->itemid;
+            insert->name=temp->name;
+            insert->finalprice=temp->finalprice;
+            if(head_cart==NULL)
+            {
+                head_cart=insert;
+            }
+            if(last==NULL)
+            {
+                last=insert;
+            }
+            else
+            {
+                last->next=insert;
+                last=insert;
+            }
+        }
+        cout<<"\n Want to purchase more from this ? press 'y' to continue or any key to go to main menu  ";
+        char ch;
+        cin>>ch;
+        if(ch=='y')
+            shop();
+        else
+            mainmenu1();
+        }
+
+
+
+
+        //woman section
+
+
+
+        if(wmnflag==1 && clothingflag==1 && nondiscountflag==1)
+    {
+        item *temp=wcn;
+        cout<<"ItemId\tItem Name\tPrice\tDiscount\tPriceAfterDisc\tGST\tFinal Price"<<endl;
+        while(temp!=NULL)
+        {
+
+            cout<<temp->itemid<<"\t"<<temp->name<<"\t"<<temp->price<<"\t"<<temp->discount<<"%"<<"\t\t"<<temp->priceafterdiscount<<"\t\t"<<temp->GST<<"%"<<"\t"<<temp->finalprice<<endl;
+            temp=temp->next;
+        }
+        cout<<"Please select the item through Item ID ";
+       // fflush(stdin);
+
+        int id;
+        cin>>id;
+        temp=wcn;
+        while(temp!=NULL && !(temp->itemid==id))
+        {
+            temp=temp->next;
+        }
+        if(temp==NULL)
+        {
+            cout<<"\nEnter valid ID again, Press any key to continue\n";
+            getch();
+            shop();
+        }
+        else
+        {   cart *insert=new cart;
+            insert->next=NULL;
+            insert->itemid=temp->itemid;
+            insert->name=temp->name;
+            insert->finalprice=temp->finalprice;
+            if(head_cart==NULL)
+            {
+                head_cart=insert;
+            }
+            if(last==NULL)
+            {
+                last=insert;
+            }
+            else
+            {
+                last->next=insert;
+                last=insert;
+            }
+        }
+        cout<<"\n Want to purchase more from this ? press 'y' to continue or any key to go to main menu  ";
+        char ch;
+        cin>>ch;
+
+        if(ch=='y')
+            shop();
+        else
+            mainmenu1();
+        }
+
+
+
+
+
+
+        else if(wmnflag==1 && clothingflag==1 && discountflag==1)
+        {
+        item *temp=wcd;
+        cout<<"ItemId\tItem Name\tPrice\tDiscount\tPriceAfterDisc\tGST\tFinal Price"<<endl;
+        while(temp!=NULL)
+        {
+
+            cout<<temp->itemid<<"\t"<<temp->name<<"\t"<<temp->price<<"\t"<<temp->discount<<"%"<<"\t\t"<<temp->priceafterdiscount<<"\t\t"<<temp->GST<<"%"<<"\t"<<temp->finalprice<<endl;
+            temp=temp->next;
+        }
+        cout<<"Please select the item through Item ID ";
+        int id;
+        cin>>id;
+        temp=wcd;
+        while(temp!=NULL && !(temp->itemid==id))
+        {
+            temp=temp->next;
+        }
+        if(temp==NULL)
+        {
+            cout<<"\nEnter valid ID again, Press any key to continue\n";
+            getch();
+            shop();
+        }
+        else
+        {   cart *insert=new cart;
+            insert->next=NULL;
+            insert->itemid=temp->itemid;
+            insert->name=temp->name;
+            insert->finalprice=temp->finalprice;
+            if(head_cart==NULL)
+            {
+                head_cart=insert;
+            }
+            if(last==NULL)
+            {
+                last=insert;
+            }
+            else
+            {
+                last->next=insert;
+                last=insert;
+            }
+        }
+        cout<<"\n Want to purchase more from this ? press 'y' to continue or any key to go to main menu  ";
+        char ch;
+        cin>>ch;
+        if(ch=='y')
+            shop();
+        else
+            mainmenu1();
+        }
+
+
+
+
+
+        else if(wmnflag==1 && footwearflag==1 && nondiscountflag==1)
+        {
+        item *temp=wfn;
+        cout<<"ItemId\tItem Name\tPrice\tDiscount\tPriceAfterDisc\tGST\tFinal Price"<<endl;
+        while(temp!=NULL)
+        {
+
+            cout<<temp->itemid<<"\t"<<temp->name<<"\t"<<temp->price<<"\t"<<temp->discount<<"%"<<"\t\t"<<temp->priceafterdiscount<<"\t\t"<<temp->GST<<"%"<<"\t"<<temp->finalprice<<endl;
+            temp=temp->next;
+        }
+        cout<<"Please select the item through Item ID ";
+        int id;
+        cin>>id;
+        temp=wfn;
+        while(temp!=NULL && !(temp->itemid==id))
+        {
+            temp=temp->next;
+        }
+        if(temp==NULL)
+        {
+            cout<<"\nEnter valid ID again, Press any key to continue\n";
+            getch();
+            shop();
+        }
+        else
+        {   cart *insert=new cart;
+            insert->next=NULL;
+            insert->itemid=temp->itemid;
+            insert->name=temp->name;
+            insert->finalprice=temp->finalprice;
+            if(head_cart==NULL)
+            {
+                head_cart=insert;
+            }
+            if(last==NULL)
+            {
+                last=insert;
+            }
+            else
+            {
+                last->next=insert;
+                last=insert;
+            }
+        }
+        cout<<"\n Want to purchase more from this ? press 'y' to continue or any key to go to main menu  ";
+        char ch;
+        cin>>ch;
+        if(ch=='y')
+            shop();
+        else
+            mainmenu1();
+        }
+
+
+
+
+
+
+        else if(wmnflag==1 && footwearflag==1 && discountflag==1)
+        {
+        item *temp=wfd;
+        cout<<"ItemId\tItem Name\tPrice\tDiscount\tPriceAfterDisc\tGST\tFinal Price"<<endl;
+        while(temp!=NULL)
+        {
+
+            cout<<temp->itemid<<"\t"<<temp->name<<"\t"<<temp->price<<"\t"<<temp->discount<<"%"<<"\t\t"<<temp->priceafterdiscount<<"\t\t"<<temp->GST<<"%"<<"\t"<<temp->finalprice<<endl;
+            temp=temp->next;
+        }
+        cout<<"Please select the item through Item ID ";
+        int id;
+        cin>>id;
+        temp=wfd;
+        while(temp!=NULL && !(temp->itemid==id))
+        {
+            temp=temp->next;
+        }
+        if(temp==NULL)
+        {
+            cout<<"\nEnter valid ID again, Press any key to continue\n";
+            getch();
+            shop();
+        }
+        else
+        {   cart *insert=new cart;
+            insert->next=NULL;
+            insert->itemid=temp->itemid;
+            insert->name=temp->name;
+            insert->finalprice=temp->finalprice;
+            if(head_cart==NULL)
+            {
+                head_cart=insert;
+            }
+            if(last==NULL)
+            {
+                last=insert;
+            }
+            else
+            {
+                last->next=insert;
+                last=insert;
+            }
+        }
+        cout<<"\n Want to purchase more from this ? press 'y' to continue or any key to go to main menu  ";
+        char ch;
+        cin>>ch;
+        if(ch=='y')
+            shop();
+        else
+            mainmenu1();
+        }
+
+
+
+
+
+
+}
+void placeorder()
+{
+cart* temp=head_cart;
+    system("cls");
+    float price=0;  //price in the cart
+    while(temp!=NULL)
+        {
+            price=temp->finalprice+price;
+            temp=temp->next;
+        }
+    cout<<"--------------------------------------------------your bill is="<<price<<"--------------------------------------------------------------------"<<endl;
+    cout<<"--------------------------------------------------Thanks for Shopping with us-----------------------------------------------------------------"<<endl;
+    cout<<"Press any key to go to main menu ";
+    getch();
+    mainmenu1();
+
+}
+
+
+
+void cartdisplay()
+{
+    cart* temp=head_cart;
+    system("cls");
+    cout<<"ItemId\tItem Name\tFinal Price"<<endl;
+    float price=0;  //price in the cart
+    while(temp!=NULL)
+        {
+            cout<<temp->itemid<<"\t"<<temp->name<<"\t"<<temp->finalprice<<endl;
+            price=temp->finalprice+price;
+            temp=temp->next;
+        }
+    cout<<"\t\t\tTotal Price="<<price<<endl;
+    cout<<"Want to place order ? press y/Y to place or any key to go in main menu ";
+    char ch;
+    cin>>ch;
+    if(ch=='y' || ch=='Y')
+    {
+       placeorder();
+    }
+    else
+    {
+        mainmenu1();
+    }
+
+}
+
+
+
+
+void mainmenu1()
+{
+    int choice;
+    system("cls");
+    cout<<"1. Account\n";
+    cout<<"2. Shop\n";
+    cout<<"3. Checkout\n";
+    cout<<"4. Exit \n";
+    cout<<"Enter your choice\n";
+    cin>>choice;
+    switch(choice)
+    {
+    case 1:
+        Account();
+         break;
+    case 2:
+         gender();
+         break;
+    case 3:
+          cartdisplay();
+          break;
+    case 4:
+        system("cls");
+        cout<<" Thanks for using this WEBSITE Press any key to exit";
+        getch();
+        exit(1);
+    default:
+        mainmenu1();
+    }
+}
+
+void frontpage()
+{
+    int choice;
+    cout<<" ********************* LOGIN *******************\n";
+    cout<<"1.Login";
+    cout<<"\n2.Signup";
+    cout<<"\nEnter your choice :";
+    cin>>choice;
+    switch(choice)
+    {
+    case 1:
+         login();
+         break;
+    case 2:
+         signup();
+         break;
+    default:
+        cout<<"Sorry,wrong choice selected\n";
+        frontpage();
+    }
+}
+void signup()
+{
+  string reguser,regpass,dateofbirth;
+  system("cls");
+  cout<<"Enter the username :";
+  cin>>reguser;
+  cout<<"Enter the password :";
+  cin>>regpass;
+  cout<<"Enter dateofbirth :";
+  cin>>dateofbirth;
+  ifstream input("database.txt");
+  string u,p,d;
+  int i;
+  ofstream reg("database.txt",ios::app);
+  userid++;
+  reg<<userid<<' '<<reguser<<' '<<regpass<<' '<<dateofbirth<<endl;
+  system("cls");
+  cout<<"Registration is successfull\n";
+  frontpage();
+}
+void login()
+{
+    string user,pass,u,p,d;
+    int i;
+    system("cls");
+    cout<<"Enter the username :";
+    cin>>user;
+    cout<<"Enter the password :";
+    cin>>pass;
+
+    ifstream input("database.txt");
+
+    while(input>>i>>u>>p>>d)
+    {
+        if(u == user&& p == pass)
+        {
+            loginflag=1;
+            searchuser=u;
+        }
+    }
+    input.close();
+    if(loginflag == 1)
+    {
+      cout<<"Hello "<<user<<"\nWe are glad that you are here\n";
+      getch();
+      mainmenu1();
+    }
+    else
+    {
+        cout<<"Sorry,Login error. ";
+        getch();
+        frontpage();
+    }
+}
+
+int main()
+{
+   database();
+   frontpage();
+   return 0;
+}
